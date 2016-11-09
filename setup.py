@@ -8,4 +8,5 @@ setup(name='miner-db',
       url='http://github.com/eddieantonio/miner-db',
       author='Eddie Antonio Santos',
       author_email='easantos@ualberta.ca',
+      include_package_data=True,
       packages=['miner_db'])
