@@ -16,7 +16,7 @@
 Miner DB entry point.
 """
 
-__version__ = '0.1.1'
-__all__ = ['Database']
+__version__ = '0.1.2'
+__all__ = ['Database', 'DuplicateFileError']
 
-from .database import Database
+from .database import Database, DuplicateFileError
