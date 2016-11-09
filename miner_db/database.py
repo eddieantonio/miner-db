@@ -53,19 +53,11 @@ import logging
 import sqlite3
 from contextlib import closing
 
-from path import Path
-
 from .datatypes import Repository, SourceFile, ParsedSource
 from .utils import is_hash
 
 
 logger = logging.getLogger(__name__)
-
-SCHEMA_FILENAME = Path(__file__).parent / 'schema.sql'
-with open(SCHEMA_FILENAME, encoding='UTF-8') as schema_file:
-    SCHEMA = schema_file.read()
-    del schema_file
-
 
 class DuplicateFileError(Exception):
     def __init__(self, hash_):
@@ -99,6 +91,14 @@ class Database:
         self._initialize_db()
 
     def _initialize_db(self):
+        from path import Path
+
+        SCHEMA_FILENAME = Path(__file__).parent / 'schema.sql'
+        with open(SCHEMA_FILENAME, encoding='UTF-8') as schema_file:
+            SCHEMA = schema_file.read()
+            del schema_file
+
+
         conn = self.conn
         if self._is_database_empty():
             with conn:
