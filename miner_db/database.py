@@ -87,15 +87,16 @@ class Database:
     Because I like writing ORMs from scratch.
     """
 
-    def __init__(self, connection=None):
+    def __init__(self, connection=None, read_only=False):
         if connection is None:
             logger.warn("Using in memory database!")
             self.conn = sqlite3.connect(':memory:')
         else:
             self.conn = connection
 
-        self._set_wal()
-        self._initialize_db()
+        if not read_only:
+            self._set_wal()
+            self._initialize_db()
 
     def _initialize_db(self):
         from path import Path
