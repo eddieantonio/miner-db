@@ -43,17 +43,24 @@ True
 >>> db.get_source(source_a.hash)
 b'void 0;'
 
->>> repo = Repository.create('github', 'example-2', None, 'master')
->>> ret = db.add_repository(repo)
->>> ret == repo
+>>> repo_b = Repository.create('github', 'example-2', None, 'master')
+>>> ret = db.add_repository(repo_b)
+>>> ret == repo_b
 True
+
+>>> repo_c, source_file = db.get_info(source_a.hash)
+>>> repo_c == repo
+True
+>>> source_file.path
+'index.js'
+
 """
 
 import logging
 import sqlite3
 from contextlib import closing
 
-from .datatypes import Repository, SourceFile, ParsedSource
+from .datatypes import RepositoryID, Repository, SourceFile, ParsedSource
 from .utils import is_hash
 
 
@@ -160,6 +167,33 @@ class Database:
             raise DuplicateFileError(source_file.hash)
 
         return source_file
+
+    def get_info(self, file_hash):
+        """
+        Returns both the Repository AND the source file.
+        """
+        with closing(self.conn.cursor()) as cur:
+            cur.execute("""
+                SELECT owner, repo, license, revision, path, source
+                  FROM source_file JOIN repository USING (owner, repo)
+                 WHERE hash = ?
+            """, (file_hash,))
+            result = cur.fetchone()
+
+        if result is None:
+            raise SourceNotFoundError(hash_)
+
+        owner, repo, license, revision, path, source = result
+
+        # Source must always be in bytes to be safe, but if it's already
+        # Unicode, return it in the one true encoding ;)
+        source = source.encode('utf-8') if isinstance(source, str) else source
+
+        repo_id = RepositoryID(owner, repo)
+        repo_info = Repository(repo_id, license=license, revision=revision)
+        source_info = SourceFile(repo_id, file_hash, source, path)
+        return repo_info, source_info
+
 
     def get_source(self, hash_):
         """
